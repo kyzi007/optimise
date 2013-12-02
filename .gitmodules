@@ -1,0 +1,3 @@
+[submodule "modules/minimalcomps"]
+	path = modules/minimalcomps
+	url = https://github.com/minimalcomps/minimalcomps.git
