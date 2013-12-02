@@ -22,23 +22,34 @@ package tread {
         private var _btnEnterFrame:PushButton;
         private var _bar:ProgressBar;
         private var _startTime:int;
-        private var _slice:Slider;
-        private var _label:Label;
+        private var _sliceCount:Slider;
+        private var _labelCount:Label;
+        private var _labelFrameRound:Label;
+        private var _sliceFrameRound:Slider;
+        private var _frameTime:int;
 
         public function ThreadMain () {
             var box:VBox = new VBox(this);
-            _label = new Label();
+            _labelCount = new Label();
 
-            _slice = new Slider();
-            _slice.width = 200;
-            _slice.value = 50;
-            _slice.addEventListener(Event.CHANGE, changeSliceHandler);
-            changeSliceHandler(null);
+            _sliceCount = new Slider();
+            _sliceCount.width = 200;
+            _sliceCount.value = 50;
+            _sliceCount.addEventListener(Event.CHANGE, changeSliceCountHandler);
+            changeSliceCountHandler(null);
+
+            _labelFrameRound = new Label();
+
+            _sliceFrameRound = new Slider();
+            _sliceFrameRound.width = 200;
+            _sliceFrameRound.value = 50;
+            _sliceFrameRound.addEventListener(Event.CHANGE, changeSliceFrameRoundHandler);
+            changeSliceFrameRoundHandler(null);
 
             _tf = new TextField();
             _tf.border = true;
             _tf.height = 100;
-            _tf.width = 200;
+            _tf.width = 400;
 
             _btnNormal = new PushButton();
             _btnNormal.label = "test normal";
@@ -51,17 +62,27 @@ package tread {
             _bar = new ProgressBar();
             _bar.width = 200;
 
-            box.addChild(_label);
-            box.addChild(_slice);
+            box.addChild(_labelCount);
+            box.addChild(_sliceCount);
+            box.addChild(_labelFrameRound);
+            box.addChild(_sliceFrameRound);
             box.addChild(_tf);
             box.addChild(_bar);
             box.addChild(_btnNormal);
             box.addChild(_btnEnterFrame);
+
+            x = 20;
+            y = 20;
         }
 
-        private function changeSliceHandler (event:Event):void {
-            _maxCount = _slice.value * 1000;
-            _label.text = "count " + _maxCount;
+        private function changeSliceFrameRoundHandler (event:Event):void {
+            _frameTime = (_sliceFrameRound.value / 100) * 1000 / 20;// fps * ms * percent
+            _labelFrameRound.text = "time calculations in frame" + _frameTime;
+        }
+
+        private function changeSliceCountHandler (event:Event):void {
+            _maxCount = _sliceCount.value * 1000;
+            _labelCount.text = "amount of calls" + _maxCount;
         }
 
         private function clickBtnEnterFrameHandler (event:MouseEvent):void {
@@ -81,18 +102,29 @@ package tread {
                 _count++;
                 _bar.value = _count / _maxCount;
             }
-            _tf.appendText(_maxCount + ': normal ' + (getTimer() - _startTime) + '\n');
+            _tf.appendText(
+                ' normal time = '
+                    + (getTimer() - _startTime)
+                    + ', count = ' + _maxCount
+                    + '\n'
+            );
         }
 
         private function enterFrameHandler (event:Event):void {
             var startTime:int = getTimer();
-            while (_count < _maxCount && getTimer() - startTime < 40) {// 50mc (frame time)  -  (~10 mc stage draw)
+            while (_count < _maxCount && getTimer() - startTime < _frameTime) {
                 make();
                 _count++;
                 _bar.value = _count / _maxCount;
             }
             if (_count >= _maxCount) {
-                _tf.appendText(_maxCount + ': enter frame ' + (getTimer() - _startTime) + '\n');
+                _tf.appendText(
+                    ' enter frame time = '
+                        + (getTimer() - _startTime)
+                        + ' count = ' + _maxCount
+                        + ', frame time = ' + _frameTime
+                        + '\n'
+                );
                 stage.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
             }
         }
