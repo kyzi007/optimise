@@ -15,6 +15,10 @@ package tread {
             _dispatcher = dispatcher;
         }
 
+        /**
+         * start calculations
+         * @param callback
+         */
         public function start (callback:Function):void {
             _callback = callback;
             _dispatcher.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
@@ -37,11 +41,15 @@ package tread {
             }
         }
 
-        public function finish ():void {
+        private function finish ():void {
             _dispatcher.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
             _callback = null;
         }
 
+        /**
+         * make time for other calculations (stage draw, for example)
+         * @param value
+         */
         public function set frameRound (value:Number):void {
             _frameRound = value;
             _frameTime = _frameRound * 1000 / fps;
