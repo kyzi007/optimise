@@ -2,23 +2,40 @@ package tread {
     import flash.display.Sprite;
     import flash.events.Event;
     import flash.events.MouseEvent;
-    import flash.utils.getTimer;
 
     import utils.TimeDebug;
 
     [SWF(frameRate=20)]
     public class ThreadSimpleMain extends Sprite {
-
-        private static const _FPS:int = 20;
-
-        private var _frameTime:int;
         private var _testArray:Array;
         private var _countCall:int = 0;
         private var _maxCountCall:int = 0;
-        private var _ui:ThreadUI;
 
+        private var _ui:ThreadUI;
+        private var _callManager:SimpleCallManager;
 
         public function ThreadSimpleMain () {
+            initCallManager();
+            initUi();
+        }
+
+        private function initCallManager ():void {
+            _callManager = new SimpleCallManager(stage);
+            _callManager.fps = 20;
+            _callManager.addEventListener(CallManagerEvent.FINISH, finishСalculation)
+        }
+
+        private function finishСalculation (event:CallManagerEvent):void {
+            _ui.tf.appendText(
+                ' enter frame time = '
+                    + TimeDebug.end()
+                    + ' count = ' + _maxCountCall
+                    + ', frame round = ' + _callManager.frameRound
+                    + '\n'
+            );
+        }
+
+        private function initUi ():void {
             _ui = new ThreadUI();
             _ui.sliceCount.addEventListener(Event.CHANGE, changeSliceCountHandler);
             changeSliceCountHandler(null);
@@ -35,8 +52,8 @@ package tread {
         }
 
         private function changeSliceFrameRoundHandler (event:Event):void {
-            _frameTime = (_ui.sliceFrameRound.value / 100) * 1000 / 20;// fps * ms * percent
-            _ui.labelFrameRound.text = "time calculations in frame" + _frameTime;
+            _callManager.frameRound = _ui.sliceFrameRound.value / 100;
+            _ui.labelFrameRound.text = "time calculations in frame" + _callManager.frameRound;
         }
 
         private function changeSliceCountHandler (event:Event):void {
@@ -48,8 +65,7 @@ package tread {
             TimeDebug.start();
             _testArray = [];
             _countCall = 0;
-            stage.addEventListener(Event.ENTER_FRAME, enterFrameHandler);
-            enterFrameHandler(null);
+            _callManager.start(make);
         }
 
         private function clickBtnNormalHandler (event:MouseEvent):void {
@@ -58,8 +74,6 @@ package tread {
             _countCall = 0;
             while (_countCall < _maxCountCall) {
                 make();
-                _countCall++;
-                _ui.bar.value = _countCall / _maxCountCall;
             }
             _ui.tf.appendText(
                 ' normal time = '
@@ -69,26 +83,7 @@ package tread {
             );
         }
 
-        private function enterFrameHandler (event:Event):void {
-            var startTime:int = getTimer();
-            while (_countCall < _maxCountCall && getTimer() - startTime < _frameTime) {
-                make();
-                _countCall++;
-                _ui.bar.value = _countCall / _maxCountCall;
-            }
-            if (_countCall >= _maxCountCall) {
-                _ui.tf.appendText(
-                    ' enter frame time = '
-                        + TimeDebug.end()
-                        + ' count = ' + _maxCountCall
-                        + ', frame time = ' + _frameTime
-                        + '\n'
-                );
-                stage.removeEventListener(Event.ENTER_FRAME, enterFrameHandler);
-            }
-        }
-
-        public function make ():void {
+        private function make ():Boolean {
             var arr:Array = [];
             _testArray.push(arr);
             for (var i:int = 0; i < 100; i++) {
@@ -96,6 +91,9 @@ package tread {
                 var b:int = Math.random();
                 arr.push(a + b);
             }
+            _countCall++;
+            _ui.bar.value = _countCall / _maxCountCall;
+            return _countCall >= _maxCountCall;
         }
     }
 }
